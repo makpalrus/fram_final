@@ -1,0 +1,44 @@
+package handlers
+
+import (
+	"final/config"
+	"final/models"
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+func CreateEnrollment(c *gin.Context) {
+	var enrollment models.Enrollment
+	if err := c.ShouldBindJSON(&enrollment); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	config.DB.Create(&enrollment)
+	c.JSON(http.StatusCreated, enrollment)
+}
+
+func GetUserEnrollments(c *gin.Context) {
+	var enrollments []models.Enrollment
+	config.DB.Where("user_id = ?", c.Param("user_id")).Find(&enrollments)
+	c.JSON(http.StatusOK, enrollments)
+}
+func UpdateEnrollment(c *gin.Context) {
+	var enrollment models.Enrollment
+	if err := config.DB.First(&enrollment, c.Param("id")).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Enrollment not found"})
+		return
+	}
+	c.ShouldBindJSON(&enrollment)
+	config.DB.Save(&enrollment)
+	c.JSON(http.StatusOK, enrollment)
+}
+
+func DeleteEnrollment(c *gin.Context) {
+	var enrollment models.Enrollment
+	if err := config.DB.First(&enrollment, c.Param("id")).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Enrollment not found"})
+		return
+	}
+	config.DB.Delete(&enrollment)
+	c.JSON(http.StatusOK, gin.H{"message": "Enrollment deleted"})
+}
