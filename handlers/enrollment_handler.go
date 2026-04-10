@@ -3,8 +3,9 @@ package handlers
 import (
 	"final/config"
 	"final/models"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func CreateEnrollment(c *gin.Context) {
@@ -16,12 +17,21 @@ func CreateEnrollment(c *gin.Context) {
 	config.DB.Create(&enrollment)
 	c.JSON(http.StatusCreated, enrollment)
 }
-
-func GetUserEnrollments(c *gin.Context) {
+func GetEnrollments(c *gin.Context) {
 	var enrollments []models.Enrollment
-	config.DB.Where("user_id = ?", c.Param("user_id")).Find(&enrollments)
+	if err := config.DB.Find(&enrollments).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении данных"})
+		return
+	}
 	c.JSON(http.StatusOK, enrollments)
 }
+func GetUserEnrollments(c *gin.Context) {
+	var enrollments []models.Enrollment
+	userID := c.Param("user_id")
+	config.DB.Where("user_id = ?", userID).Find(&enrollments)
+	c.JSON(http.StatusOK, enrollments)
+}
+
 func UpdateEnrollment(c *gin.Context) {
 	var enrollment models.Enrollment
 	if err := config.DB.First(&enrollment, c.Param("id")).Error; err != nil {

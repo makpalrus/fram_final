@@ -3,37 +3,43 @@ package main
 import (
 	"final/config"
 	"final/handlers"
+	"final/middleware"
 	"final/models"
+
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	config.ConnectDatabase()
 
-	// AutoMigrate — создаёт таблицы автоматически
 	config.DB.AutoMigrate(&models.User{}, &models.Course{}, &models.Enrollment{})
 
 	r := gin.Default()
 
-	// Users
-	r.GET("/users", handlers.GetUsers)
-	r.POST("/users", handlers.CreateUser)
-	r.GET("/users/:id", handlers.GetUser)
-	r.PUT("/users/:id", handlers.UpdateUser)
-	r.DELETE("/users/:id", handlers.DeleteUser)
+	r.POST("/register", handlers.Register)
+	r.POST("/login", handlers.Login)
 
-	// Courses
-	r.GET("/courses", handlers.GetCourses)
-	r.POST("/courses", handlers.CreateCourse)
-	r.GET("/courses/:id", handlers.GetCourse)
-	r.PUT("/courses/:id", handlers.UpdateCourse)
-	r.DELETE("/courses/:id", handlers.DeleteCourse)
+	protected := r.Group("/")
+	protected.Use(middleware.AuthMiddleware())
+	{
+		protected.GET("/users", handlers.GetUsers)
+		protected.POST("/users", handlers.CreateUser)
+		protected.GET("/users/:id", handlers.GetUser)
+		protected.PUT("/users/:id", handlers.UpdateUser)
+		protected.DELETE("/users/:id", handlers.DeleteUser)
 
-	// Enrollments
-	r.POST("/enrollments", handlers.CreateEnrollment)
-	r.GET("/enrollments/:user_id", handlers.GetUserEnrollments)
-	r.PUT("/enrollments/:id", handlers.UpdateEnrollment)
-	r.DELETE("/enrollments/:id", handlers.DeleteEnrollment)
+		protected.GET("/courses", handlers.GetCourses)
+		protected.POST("/courses", handlers.CreateCourse)
+		protected.GET("/courses/:id", handlers.GetCourse)
+		protected.PUT("/courses/:id", handlers.UpdateCourse)
+		protected.DELETE("/courses/:id", handlers.DeleteCourse)
+
+		protected.POST("/enrollments", handlers.CreateEnrollment)
+		protected.GET("/enrollments/:user_id", handlers.GetUserEnrollments)
+		protected.PUT("/enrollments/:id", handlers.UpdateEnrollment)
+		protected.DELETE("/enrollments/:id", handlers.DeleteEnrollment)
+		protected.GET("/enrollments", handlers.GetEnrollments)
+	}
 
 	r.Run(":8080")
 }
