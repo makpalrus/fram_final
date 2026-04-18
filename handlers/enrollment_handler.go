@@ -14,17 +14,22 @@ func CreateEnrollment(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	config.DB.Create(&enrollment)
+	if err := config.DB.Create(&enrollment).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusCreated, enrollment)
 }
+
 func GetEnrollments(c *gin.Context) {
 	var enrollments []models.Enrollment
 	if err := config.DB.Find(&enrollments).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при получении данных"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch enrollments"})
 		return
 	}
 	c.JSON(http.StatusOK, enrollments)
 }
+
 func GetUserEnrollments(c *gin.Context) {
 	var enrollments []models.Enrollment
 	userID := c.Param("user_id")
@@ -38,7 +43,10 @@ func UpdateEnrollment(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Enrollment not found"})
 		return
 	}
-	c.ShouldBindJSON(&enrollment)
+	if err := c.ShouldBindJSON(&enrollment); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	config.DB.Save(&enrollment)
 	c.JSON(http.StatusOK, enrollment)
 }

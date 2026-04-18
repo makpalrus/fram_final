@@ -27,7 +27,11 @@ func Register(c *gin.Context) {
 	}
 	input.Password = string(hashedPassword)
 
-	config.DB.Create(&input)
+	if err := config.DB.Create(&input).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists"})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
 }
 

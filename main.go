@@ -4,18 +4,15 @@ import (
 	"final/config"
 	"final/handlers"
 	"final/middleware"
-	"final/models"
-
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	config.ConnectDatabase()
 
-	config.DB.AutoMigrate(&models.User{}, &models.Course{}, &models.Enrollment{})
-
 	r := gin.Default()
 
+	// Публичные роуты
 	r.POST("/register", handlers.Register)
 	r.POST("/login", handlers.Login)
 
@@ -36,9 +33,9 @@ func main() {
 
 		protected.POST("/enrollments", handlers.CreateEnrollment)
 		protected.GET("/enrollments/:user_id", handlers.GetUserEnrollments)
+		protected.GET("/enrollments", handlers.GetEnrollments)
 		protected.PUT("/enrollments/:id", handlers.UpdateEnrollment)
 		protected.DELETE("/enrollments/:id", handlers.DeleteEnrollment)
-		protected.GET("/enrollments", handlers.GetEnrollments)
 	}
 
 	r.Run(":8080")
