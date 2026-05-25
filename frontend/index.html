@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EduPlatform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface2: #1c1c2e;
+            --border: #2a2a40;
+            --accent: #6c63ff;
+            --accent2: #ff6584;
+            --accent3: #43e97b;
+            --text: #e8e8f0;
+            --muted: #6b6b8a;
+            --card: #15151f;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -200px; left: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(108,99,255,0.12) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -200px; right: -200px;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(255,101,132,0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px;
+            height: 64px;
+            background: rgba(10,10,15,0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+        }
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem; font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        nav { display: flex; gap: 6px; }
+        nav button {
+            background: none; border: none; cursor: pointer;
+            font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+            color: var(--muted); padding: 8px 16px; border-radius: 8px;
+            transition: all 0.2s;
+        }
+        nav button:hover, nav button.active {
+            color: var(--text); background: var(--surface2);
+        }
+        .header-auth { display: flex; gap: 10px; align-items: center; }
+        #user-badge {
+            display: none;
+            align-items: center; gap: 8px;
+            padding: 6px 14px; border-radius: 20px;
+            background: var(--surface2); border: 1px solid var(--border);
+            font-size: 0.85rem; color: var(--text);
+        }
+        #user-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent3); }
+        .role-tag {
+            padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .role-tag.admin { background: rgba(108,99,255,0.2); color: var(--accent); border: 1px solid rgba(108,99,255,0.4); }
+        .role-tag.user { background: rgba(67,233,123,0.1); color: var(--accent3); border: 1px solid rgba(67,233,123,0.3); }
+
+        .btn { padding: 8px 20px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; }
+        .btn-ghost { background: none; border: 1px solid var(--border); color: var(--muted); }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: #7c74ff; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(108,99,255,0.4); }
+        .btn-danger { background: rgba(255,101,132,0.15); color: var(--accent2); border: 1px solid rgba(255,101,132,0.3); }
+        .btn-danger:hover { background: rgba(255,101,132,0.25); }
+        .btn-success { background: rgba(67,233,123,0.15); color: var(--accent3); border: 1px solid rgba(67,233,123,0.3); }
+        .btn-success:hover { background: rgba(67,233,123,0.25); }
+        .btn-edit { background: rgba(255,200,0,0.1); color: #ffc800; border: 1px solid rgba(255,200,0,0.3); }
+        .btn-edit:hover { background: rgba(255,200,0,0.2); }
+
+        main { position: relative; z-index: 1; padding: 40px; max-width: 1200px; margin: 0 auto; }
+
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hero { text-align: center; padding: 80px 20px 60px; }
+        .hero-tag {
+            display: inline-block; margin-bottom: 20px;
+            padding: 6px 16px; border-radius: 20px;
+            background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3);
+            font-size: 0.8rem; color: var(--accent); letter-spacing: 1px; text-transform: uppercase;
+        }
+        .hero h1 {
+            font-family: 'Syne', sans-serif; font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800; line-height: 1.1; letter-spacing: -1px; margin-bottom: 20px;
+        }
+        .hero h1 span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { font-size: 1.1rem; color: var(--muted); max-width: 500px; margin: 0 auto 36px; line-height: 1.7; }
+        .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn-large { padding: 14px 32px; font-size: 1rem; border-radius: 12px; }
+
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 40px 0; }
+        .stat-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+            padding: 28px; text-align: center; transition: all 0.3s;
+        }
+        .stat-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+        .stat-num { font-family: 'Syne', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--accent); }
+        .stat-label { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+        .section-title { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 700; }
+
+        .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .course-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+            padding: 24px; transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .course-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            transform: scaleX(0); transform-origin: left; transition: transform 0.3s;
+        }
+        .course-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(108,99,255,0.15); }
+        .course-card:hover::before { transform: scaleX(1); }
+        .course-badge {
+            display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;
+            background: rgba(108,99,255,0.15); color: var(--accent); margin-bottom: 12px;
+        }
+        .course-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .course-desc { color: var(--muted); font-size: 0.875rem; line-height: 1.6; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .course-footer { display: flex; align-items: center; justify-content: space-between; }
+        .course-price { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--accent3); }
+        .course-duration { font-size: 0.8rem; color: var(--muted); }
+        .card-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+        .auth-wrap { max-width: 440px; margin: 60px auto; }
+        .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px; }
+        .form-card h2 { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 6px; }
+        .form-card .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.3px; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; padding: 12px 16px; border-radius: 10px;
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+            transition: all 0.2s; outline: none;
+        }
+        .form-group select option { background: var(--surface2); }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,99,255,0.15); }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-submit { width: 100%; padding: 14px; font-size: 1rem; font-weight: 600; border-radius: 12px; margin-top: 8px; }
+        .form-switch { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+        .form-switch a { color: var(--accent); cursor: pointer; text-decoration: none; font-weight: 500; }
+        .form-switch a:hover { text-decoration: underline; }
+
+        .alert {
+            padding: 12px 16px; border-radius: 10px; margin-bottom: 20px;
+            font-size: 0.875rem; display: none; align-items: center; gap: 8px;
+        }
+        .alert.show { display: flex; }
+        .alert-success { background: rgba(67,233,123,0.1); border: 1px solid rgba(67,233,123,0.3); color: var(--accent3); }
+        .alert-error { background: rgba(255,101,132,0.1); border: 1px solid rgba(255,101,132,0.3); color: var(--accent2); }
+
+        .enroll-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+            padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 12px; transition: all 0.2s;
+        }
+        .enroll-card:hover { background: var(--surface2); }
+        .enroll-info { flex: 1; }
+        .enroll-title { font-weight: 600; margin-bottom: 4px; }
+        .enroll-meta { font-size: 0.8rem; color: var(--muted); }
+        .badge-active { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; background: rgba(67,233,123,0.15); color: var(--accent3); border: 1px solid rgba(67,233,123,0.3); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 36px; max-width: 480px; width: 90%; animation: fadeIn 0.2s ease; }
+        .modal h3 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 20px; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+        .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+        .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+        .empty h3 { font-family: 'Syne', sans-serif; font-size: 1.2rem; color: var(--text); margin-bottom: 8px; }
+
+        .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .manage-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+        .users-table { width: 100%; border-collapse: collapse; }
+        .users-table th { text-align: left; padding: 12px 16px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); border-bottom: 1px solid var(--border); }
+        .users-table td { padding: 14px 16px; border-bottom: 1px solid rgba(42,42,64,0.5); font-size: 0.9rem; }
+        .users-table tr:hover td { background: var(--surface2); }
+
+        .admin-banner {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 20px; border-radius: 12px; margin-bottom: 24px;
+            background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.3);
+            font-size: 0.875rem; color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            header { padding: 0 20px; }
+            main { padding: 20px; }
+            .stats { grid-template-columns: 1fr; }
+            .hero { padding: 40px 10px; }
+            nav button span { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">EduPlatform</div>
+    <nav>
+        <button class="active" onclick="showPage('home')" id="nav-home">🏠 <span>Home</span></button>
+        <button onclick="showPage('courses')" id="nav-courses">📚 <span>Courses</span></button>
+        <button onclick="showPage('enrollments')" id="nav-enrollments" style="display:none">🎓 <span>My Courses</span></button>
+        <button onclick="showPage('manage')" id="nav-manage" style="display:none">⚙️ <span>Admin</span></button>
+        <button onclick="showPage('profile')" id="nav-profile" style="display:none">👤 <span>My Profile</span></button>
+    </nav>
+    <div class="header-auth">
+        <div id="user-badge">
+            <div class="dot"></div>
+            <span id="user-name-display">User</span>
+            <span class="role-tag" id="user-role-tag"></span>
+        </div>
+        <button class="btn btn-ghost" id="btn-login" onclick="showPage('login')">Sign In</button>
+        <button class="btn btn-primary" id="btn-register" onclick="showPage('register')">Get Started</button>
+        <button class="btn btn-ghost" id="btn-logout" style="display:none" onclick="logout()">Logout</button>
+    </div>
+</header>
+
+<main>
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+        <div class="hero">
+            <div class="hero-tag">🚀 Online Learning Platform</div>
+            <h1>Learn without<br/><span>limits</span></h1>
+            <p>Enroll in world-class courses, track your progress, and grow your skills with our microservices-powered platform.</p>
+            <div class="hero-btns">
+                <button class="btn btn-primary btn-large" onclick="showPage('courses')">Browse Courses</button>
+                <button class="btn btn-ghost btn-large" onclick="showPage('register')">Create Account</button>
+            </div>
+        </div>
+        <div class="stats">
+            <div class="stat-card"><div class="stat-num" id="stat-courses">—</div><div class="stat-label">Available Courses</div></div>
+            <div class="stat-card"><div class="stat-num" id="stat-users">—</div><div class="stat-label">Registered Students</div></div>
+            <div class="stat-card"><div class="stat-num" id="stat-enrollments">—</div><div class="stat-label">Total Enrollments</div></div>
+        </div>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="page" id="page-login">
+        <div class="auth-wrap">
+            <div class="form-card">
+                <h2>Welcome back</h2>
+                <p class="subtitle">Sign in to your account</p>
+                <div class="alert alert-error" id="login-alert">⚠️ <span id="login-alert-msg"></span></div>
+                <div class="alert alert-success" id="login-success">✅ Logged in successfully!</div>
+                <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com" /></div>
+                <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" /></div>
+                <button class="btn btn-primary form-submit" onclick="login()">Sign In</button>
+                <div class="form-switch">Don't have an account? <a onclick="showPage('register')">Register</a></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="page" id="page-register">
+        <div class="auth-wrap">
+            <div class="form-card">
+                <h2>Create account</h2>
+                <p class="subtitle">Start learning today — it's free</p>
+                <div class="alert alert-error" id="register-alert">⚠️ <span id="register-alert-msg"></span></div>
+                <div class="alert alert-success" id="register-success">🎉 Account created! You can now log in.</div>
+                <div class="form-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="John Doe" /></div>
+                <div class="form-group"><label>Email</label><input type="email" id="reg-email" placeholder="you@example.com" /></div>
+                <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="min 6 characters" /></div>
+
+                <button class="btn btn-primary form-submit" onclick="register()">Create Account</button>
+                <div class="form-switch">Already have an account? <a onclick="showPage('login')">Sign in</a></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COURSES -->
+    <div class="page" id="page-courses">
+        <div class="section-header">
+            <h2 class="section-title">All Courses</h2>
+            <button class="btn btn-primary" onclick="openAddCourseModal()" id="btn-add-course" style="display:none">+ Add Course</button>
+        </div>
+        <div style="margin-bottom:24px;position:relative">
+            <input type="text" id="courses-search" placeholder="🔍  Search courses by name..." oninput="onSearchInput(this.value)"
+                   style="width:100%;padding:12px 44px 12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.95rem;outline:none;transition:border-color 0.2s" />
+            <button onclick="clearSearch()" id="btn-clear-search" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:4px">✕</button>
+        </div>
+        <div class="courses-grid" id="courses-grid">
+            <div class="empty"><div class="spinner"></div></div>
+        </div>
+    </div>
+
+    <!-- ENROLLMENTS -->
+    <div class="page" id="page-enrollments">
+        <div class="section-header">
+            <h2 class="section-title">My Enrollments</h2>
+        </div>
+        <div id="enrollments-list"></div>
+    </div>
+
+    <!-- MANAGE (admin only) -->
+    <div class="page" id="page-manage">
+        <div class="admin-banner">🛡️ Admin Panel — you have full access to manage users and courses</div>
+        <div class="manage-header">
+            <h2 class="section-title">User Management</h2>
+        </div>
+        <table class="users-table" id="users-table">
+            <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+            <tbody id="users-tbody"></tbody>
+        </table>
+    </div>
+
+
+    <!-- PROFILE -->
+    <div class="page" id="page-profile">
+        <div class="auth-wrap" style="max-width:520px">
+            <div class="form-card">
+                <h2>My Profile</h2>
+                <p class="subtitle">Update your account information</p>
+                <div class="alert alert-success" id="profile-success">✅ Profile updated successfully!</div>
+                <div class="alert alert-error" id="profile-alert">⚠️ <span id="profile-alert-msg"></span></div>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="profile-name" placeholder="Your name" />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="profile-email" placeholder="your@email.com" />
+                </div>
+                <div class="form-group">
+                    <label>New Password <span style="color:var(--muted);font-weight:400">(leave blank to keep current)</span></label>
+                    <input type="password" id="profile-password" placeholder="New password..." />
+                </div>
+                <button class="btn btn-primary form-submit" onclick="saveProfile()">Save Changes</button>
+                <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+                    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:8px">Account info</p>
+                    <p style="font-size:0.875rem">Role: <span id="profile-role-display" class="role-tag" style="display:inline-block"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- MODAL: Add Course -->
+<div class="modal-overlay" id="modal-course">
+    <div class="modal">
+        <h3>Add New Course</h3>
+        <div class="alert alert-error" id="course-alert">⚠️ <span id="course-alert-msg"></span></div>
+        <div class="form-group"><label>Title</label><input type="text" id="c-title" placeholder="e.g. Introduction to Go" /></div>
+        <div class="form-group"><label>Description</label><textarea id="c-desc" placeholder="Short description..."></textarea></div>
+        <div class="form-group"><label>Price ($)</label><input type="number" id="c-price" placeholder="49.99" step="0.01" /></div>
+        <div class="form-group"><label>Duration (hours)</label><input type="number" id="c-duration" placeholder="12" /></div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="createCourse()">Create Course</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Edit Course -->
+<div class="modal-overlay" id="modal-edit-course">
+    <div class="modal">
+        <h3>Edit Course</h3>
+        <div class="alert alert-error" id="edit-course-alert">⚠️ <span id="edit-course-alert-msg"></span></div>
+        <input type="hidden" id="edit-c-id" />
+        <div class="form-group"><label>Title</label><input type="text" id="edit-c-title" /></div>
+        <div class="form-group"><label>Description</label><textarea id="edit-c-desc"></textarea></div>
+        <div class="form-group"><label>Price ($)</label><input type="number" id="edit-c-price" step="0.01" /></div>
+        <div class="form-group"><label>Duration (hours)</label><input type="number" id="edit-c-duration" /></div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="updateCourse()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Enroll -->
+<div class="modal-overlay" id="modal-enroll">
+    <div class="modal">
+        <h3>Enroll in Course</h3>
+        <p style="color:var(--muted); margin-bottom:20px" id="enroll-course-title"></p>
+        <div class="alert alert-error" id="enroll-alert">⚠️ <span id="enroll-alert-msg"></span></div>
+        <div class="alert alert-success" id="enroll-success">🎉 Successfully enrolled!</div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-success" onclick="confirmEnroll()">Confirm Enrollment</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = {
+        user: 'http://localhost:8081',
+        course: 'http://localhost:8082',
+        enrollment: 'http://localhost:8083',
+    };
+
+    let state = {
+        token: localStorage.getItem('token'),
+        userId: parseInt(localStorage.getItem('userId')) || null,
+        userName: localStorage.getItem('userName') || '',
+        userRole: localStorage.getItem('userRole') || 'user',
+        selectedCourseId: null,
+    };
+
+    function isAdmin() { return state.userRole === 'admin'; }
+
+    // ── NAVIGATION ──
+    function showPage(name) {
+        if ((name === 'enrollments' || name === 'manage' || name === 'profile') && !state.token) {
+            showPage('login'); return;
+        }
+        if (name === 'manage' && !isAdmin()) {
+            showPage('home'); return;
+        }
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById('page-' + name).classList.add('active');
+        const nb = document.getElementById('nav-' + name);
+        if (nb) nb.classList.add('active');
+
+        if (name === 'courses') loadCourses();
+        if (name === 'enrollments') loadEnrollments();
+        if (name === 'manage') loadUsers();
+        if (name === 'home') loadStats();
+        if (name === 'profile') loadProfile();
+    }
+
+    function updateAuthUI() {
+        const loggedIn = !!state.token;
+        document.getElementById('btn-login').style.display = loggedIn ? 'none' : '';
+        document.getElementById('btn-register').style.display = loggedIn ? 'none' : '';
+        document.getElementById('btn-logout').style.display = loggedIn ? '' : 'none';
+        document.getElementById('nav-enrollments').style.display = loggedIn ? '' : 'none';
+        document.getElementById('nav-manage').style.display = (loggedIn && isAdmin()) ? '' : 'none';
+        document.getElementById('nav-profile').style.display = loggedIn ? '' : 'none';
+
+        const badge = document.getElementById('user-badge');
+        if (loggedIn) {
+            badge.style.display = 'flex';
+            document.getElementById('user-name-display').textContent = state.userName;
+            const roleTag = document.getElementById('user-role-tag');
+            roleTag.textContent = isAdmin() ? 'Admin' : 'Student';
+            roleTag.className = 'role-tag ' + (isAdmin() ? 'admin' : 'user');
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    // ── AUTH ──
+    async function register() {
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const password = document.getElementById('reg-password').value;
+        hideAlerts('register');
+        if (!name || !email || !password) return showAlert('register', false, 'All fields are required');
+        try {
+            const res = await fetch(`${API.user}/register`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({name, email, password})
+            });
+            const data = await res.json();
+            if (!res.ok) return showAlert('register', false, data.error || 'Registration failed');
+            showAlert('register', true);
+            setTimeout(() => showPage('login'), 1500);
+        } catch(e) { showAlert('register', false, 'Cannot connect to server'); }
+    }
+
+    async function login() {
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        hideAlerts('login');
+        try {
+            const res = await fetch(`${API.user}/login`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({email, password})
+            });
+            const data = await res.json();
+            if (!res.ok) return showAlert('login', false, data.error || 'Login failed');
+
+            state.token = data.token;
+            const payload = JSON.parse(atob(data.token.split('.')[1]));
+            state.userId = payload.user_id;
+            // Prefer name/role from login response, fallback to JWT payload
+            state.userName = data.name || payload.email.split('@')[0];
+            state.userRole = data.role || payload.role || 'user';
+
+            localStorage.setItem('token', state.token);
+            localStorage.setItem('userId', state.userId);
+            localStorage.setItem('userName', state.userName);
+            localStorage.setItem('userRole', state.userRole);
+
+            showAlert('login', true);
+            updateAuthUI();
+            setTimeout(() => showPage('courses'), 1000);
+        } catch(e) { showAlert('login', false, 'Cannot connect to server'); }
+    }
+
+    function logout() {
+        state.token = null; state.userId = null; state.userName = ''; state.userRole = 'user';
+        localStorage.removeItem('token'); localStorage.removeItem('userId');
+        localStorage.removeItem('userName'); localStorage.removeItem('userRole');
+        updateAuthUI();
+        showPage('home');
+    }
+
+    // ── COURSES ──
+    let searchTimer = null;
+    function onSearchInput(val) {
+        document.getElementById('btn-clear-search').style.display = val ? '' : 'none';
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => loadCourses(val.trim()), 350);
+    }
+    function clearSearch() {
+        document.getElementById('courses-search').value = '';
+        document.getElementById('btn-clear-search').style.display = 'none';
+        loadCourses('');
+    }
+
+    async function loadCourses(search = '') {
+        const grid = document.getElementById('courses-grid');
+        grid.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner"></div></div>';
+        try {
+            const url = search ? `${API.course}/courses?search=${encodeURIComponent(search)}` : `${API.course}/courses`;
+            const res = await fetch(url);
+            const courses = await res.json();
+
+            // Show "Add Course" button only for admins
+            document.getElementById('btn-add-course').style.display = isAdmin() ? '' : 'none';
+
+            if (!courses.length) {
+                grid.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><h3>${search ? 'No courses found' : 'No courses yet'}</h3><p>${search ? `No results for "${search}"` : isAdmin() ? 'Create the first course!' : 'Check back later.'}</p></div>`;
+                return;
+            }
+            grid.innerHTML = courses.map(c => `
+        <div class="course-card">
+          <div class="course-badge">Course #${c.id}</div>
+          <div class="course-title">${c.title}</div>
+          <div class="course-desc">${c.description || 'No description provided.'}</div>
+          <div class="course-footer">
+            <span class="course-price">$${parseFloat(c.price).toFixed(2)}</span>
+            <span class="course-duration">${c.duration || '—'} hrs</span>
+          </div>
+          <div class="card-actions">
+            ${state.token && !isAdmin() ? `<button class="btn btn-success" style="flex:1" onclick="openEnrollModal(${c.id},'${c.title.replace(/'/g,"\\'")}')">Enroll</button>` : ''}
+            ${!state.token ? `<button class="btn btn-ghost" style="flex:1" onclick="showPage('login')">Login to Enroll</button>` : ''}
+            ${isAdmin() ? `<button class="btn btn-edit" onclick="openEditCourseModal(${c.id},'${c.title.replace(/'/g,"\\'")}','${(c.description||'').replace(/'/g,"\\'")}',${c.price},${c.duration||0})">Edit</button>` : ''}
+            ${isAdmin() ? `<button class="btn btn-danger" onclick="deleteCourse(${c.id})">Delete</button>` : ''}
+          </div>
+        </div>`).join('');
+        } catch(e) {
+            grid.innerHTML = `<div class="empty"><div class="empty-icon">❌</div><h3>Connection Error</h3><p>Make sure course-service is running on port 8082</p></div>`;
+        }
+    }
+
+    async function createCourse() {
+        const title = document.getElementById('c-title').value.trim();
+        const description = document.getElementById('c-desc').value.trim();
+        const price = parseFloat(document.getElementById('c-price').value);
+        const duration = parseInt(document.getElementById('c-duration').value) || 0;
+        if (!title || isNaN(price)) return showAlert('course', false, 'Title and price are required');
+        try {
+            const res = await fetch(`${API.course}/courses`, {
+                method: 'POST', headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+state.token},
+                body: JSON.stringify({title, description, price, duration})
+            });
+            if (!res.ok) {
+                const d = await res.json();
+                return showAlert('course', false, d.error || 'Failed to create course');
+            }
+            closeModal(); loadCourses();
+        } catch(e) { showAlert('course', false, 'Connection error'); }
+    }
+
+    function openEditCourseModal(id, title, description, price, duration) {
+        document.getElementById('edit-c-id').value = id;
+        document.getElementById('edit-c-title').value = title;
+        document.getElementById('edit-c-desc').value = description;
+        document.getElementById('edit-c-price').value = price;
+        document.getElementById('edit-c-duration').value = duration;
+        hideAlerts('edit-course');
+        document.getElementById('modal-edit-course').classList.add('show');
+    }
+
+    async function updateCourse() {
+        const id = document.getElementById('edit-c-id').value;
+        const title = document.getElementById('edit-c-title').value.trim();
+        const description = document.getElementById('edit-c-desc').value.trim();
+        const price = parseFloat(document.getElementById('edit-c-price').value);
+        const duration = parseInt(document.getElementById('edit-c-duration').value) || 0;
+        if (!title || isNaN(price)) return showAlert('edit-course', false, 'Title and price are required');
+        try {
+            const res = await fetch(`${API.course}/courses/${id}`, {
+                method: 'PUT', headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+state.token},
+                body: JSON.stringify({title, description, price, duration})
+            });
+            if (!res.ok) {
+                const d = await res.json();
+                return showAlert('edit-course', false, d.error || 'Failed to update course');
+            }
+            closeModal(); loadCourses();
+        } catch(e) { showAlert('edit-course', false, 'Connection error'); }
+    }
+
+    async function deleteCourse(id) {
+        if (!confirm('Delete this course?')) return;
+        try {
+            const res = await fetch(`${API.course}/courses/${id}`, {
+                method:'DELETE', headers:{'Authorization':'Bearer '+state.token}
+            });
+            if (!res.ok) { alert('Failed to delete course'); return; }
+            loadCourses();
+        } catch(e) { alert('Connection error'); }
+    }
+
+    // ── ENROLLMENTS ──
+    function openEnrollModal(courseId, courseTitle) {
+        if (!state.token) { showPage('login'); return; }
+        state.selectedCourseId = courseId;
+        document.getElementById('enroll-course-title').textContent = `"${courseTitle}"`;
+        hideAlerts('enroll');
+        document.getElementById('enroll-success').classList.remove('show');
+        document.getElementById('modal-enroll').classList.add('show');
+    }
+
+    async function confirmEnroll() {
+        try {
+            const res = await fetch(`${API.enrollment}/enrollments`, {
+                method: 'POST', headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+state.token},
+                body: JSON.stringify({user_id: state.userId, course_id: state.selectedCourseId})
+            });
+            const data = await res.json();
+            if (!res.ok) return showAlert('enroll', false, data.error || 'Enrollment failed');
+            document.getElementById('enroll-success').classList.add('show');
+            setTimeout(() => { closeModal(); showPage('enrollments'); }, 1200);
+        } catch(e) { showAlert('enroll', false, 'Cannot connect to enrollment service'); }
+    }
+
+    async function loadEnrollments() {
+        const list = document.getElementById('enrollments-list');
+        list.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner"></div></div>';
+        try {
+            const res = await fetch(`${API.enrollment}/enrollments/user/${state.userId}`, {
+                headers: {'Authorization':'Bearer '+state.token}
+            });
+            const enrollments = await res.json();
+            if (!enrollments.length) {
+                list.innerHTML = `<div class="empty"><div class="empty-icon">🎓</div><h3>No enrollments yet</h3><p>Go browse courses and enroll!</p></div>`;
+                return;
+            }
+            list.innerHTML = enrollments.map(e => `
+        <div class="enroll-card">
+          <div class="enroll-info">
+            <div class="enroll-title">Course #${e.course_id}</div>
+            <div class="enroll-meta">Enrolled on ${new Date(e.created_at).toLocaleDateString()}</div>
+          </div>
+          <span class="badge-active">${e.status || 'active'}</span>
+        </div>`).join('');
+        } catch(e) { list.innerHTML = `<div class="empty"><div class="empty-icon">❌</div><h3>Connection error</h3></div>`; }
+    }
+
+    // ── USERS (admin) ──
+    async function loadUsers() {
+        const tbody = document.getElementById('users-tbody');
+        try {
+            const res = await fetch(`${API.user}/users`, {headers:{'Authorization':'Bearer '+state.token}});
+            const users = await res.json();
+            tbody.innerHTML = users.map(u => `
+        <tr>
+          <td>#${u.id}</td>
+          <td>${u.name}</td>
+          <td>${u.email}</td>
+          <td><span class="role-tag ${u.role || 'user'}">${u.role || 'user'}</span></td>
+          <td>
+            ${u.id !== state.userId
+                ? `<button class="btn btn-danger" onclick="deleteUser(${u.id})" style="padding:6px 14px;font-size:0.8rem">Delete</button>`
+                : `<span style="color:var(--muted);font-size:0.8rem">You</span>`
+            }
+          </td>
+        </tr>`).join('');
+        } catch(e) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Could not load users</td></tr>'; }
+    }
+
+    async function deleteUser(id) {
+        if (!confirm('Delete this user?')) return;
+        try {
+            const res = await fetch(`${API.user}/users/${id}`, {method:'DELETE', headers:{'Authorization':'Bearer '+state.token}});
+            if (!res.ok) { alert('Failed to delete user'); return; }
+            loadUsers();
+        } catch(e) { alert('Connection error'); }
+    }
+
+    // ── STATS ──
+    async function loadStats() {
+        try {
+            const [cr, ur, er] = await Promise.allSettled([
+                fetch(`${API.course}/courses`).then(r=>r.json()),
+                fetch(`${API.user}/users`).then(r=>r.json()),
+                fetch(`${API.enrollment}/enrollments`).then(r=>r.json()),
+            ]);
+            if (cr.status==='fulfilled' && Array.isArray(cr.value)) document.getElementById('stat-courses').textContent = cr.value.length;
+            if (ur.status==='fulfilled' && Array.isArray(ur.value)) document.getElementById('stat-users').textContent = ur.value.length;
+            if (er.status==='fulfilled' && Array.isArray(er.value)) document.getElementById('stat-enrollments').textContent = er.value.length;
+        } catch(_) {}
+    }
+
+    // ── MODAL ──
+    function openAddCourseModal() {
+        document.getElementById('c-title').value = '';
+        document.getElementById('c-desc').value = '';
+        document.getElementById('c-price').value = '';
+        document.getElementById('c-duration').value = '';
+        document.getElementById('modal-course').classList.add('show');
+        hideAlerts('course');
+    }
+    function closeModal() {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
+    }
+    document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target===m) closeModal(); }));
+
+    // ── ALERTS ──
+    function showAlert(prefix, success, msg) {
+        if (success) {
+            document.getElementById(prefix+'-success')?.classList.add('show');
+        } else {
+            const el = document.getElementById(prefix+'-alert');
+            const msgEl = document.getElementById(prefix+'-alert-msg');
+            if (el) { if(msgEl) msgEl.textContent = msg; el.classList.add('show'); }
+        }
+    }
+    function hideAlerts(prefix) {
+        document.getElementById(prefix+'-alert')?.classList.remove('show');
+        document.getElementById(prefix+'-success')?.classList.remove('show');
+    }
+
+    // ── PROFILE ──
+    async function loadProfile() {
+        try {
+            const res = await fetch(`${API.user}/users/me`, {
+                headers: {'Authorization': 'Bearer ' + state.token}
+            });
+            if (!res.ok) return;
+            const user = await res.json();
+            document.getElementById('profile-name').value = user.name || '';
+            document.getElementById('profile-email').value = user.email || '';
+            document.getElementById('profile-password').value = '';
+            const roleEl = document.getElementById('profile-role-display');
+            roleEl.textContent = user.role || 'user';
+            roleEl.className = 'role-tag ' + (user.role === 'admin' ? 'admin' : 'user');
+            hideAlerts('profile');
+        } catch(e) {}
+    }
+
+    async function saveProfile() {
+        const name = document.getElementById('profile-name').value.trim();
+        const email = document.getElementById('profile-email').value.trim();
+        const password = document.getElementById('profile-password').value;
+        hideAlerts('profile');
+        if (!name || !email) return showAlert('profile', false, 'Name and email are required');
+        const body = { name, email };
+        if (password) body.password = password;
+        try {
+            const res = await fetch(`${API.user}/users/me`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.token},
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (!res.ok) return showAlert('profile', false, data.error || 'Update failed');
+            state.userName = name;
+            localStorage.setItem('userName', name);
+            document.getElementById('user-name-display').textContent = name;
+            showAlert('profile', true);
+        } catch(e) { showAlert('profile', false, 'Connection error'); }
+    }
+
+    // ── INIT ──
+    updateAuthUI();
+    loadStats();
+</script>
+</body>
+</html>

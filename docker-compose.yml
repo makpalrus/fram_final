@@ -1,0 +1,109 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: course_db_container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Kz123456
+      POSTGRES_DB: course_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d course_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=Kz123456
+      - DB_NAME=course_db
+      - ADMIN_EMAIL=admin@gmail.com
+      - ADMIN_PASSWORD=admin
+      - ADMIN_NAME=Administrator
+      - JWT_SECRET=super-secret-key-2026-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  course-service:
+    build:
+      context: ./course-service
+      dockerfile: Dockerfile
+    container_name: course-service
+    ports:
+      - "8082:8082"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=Kz123456
+      - DB_NAME=course_db
+      - JWT_SECRET=super-secret-key-2026-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  enrollment-service:
+    build:
+      context: ./enrollment-service
+      dockerfile: Dockerfile
+    container_name: enrollment-service
+    ports:
+      - "8083:8083"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=Kz123456
+      - DB_NAME=course_db
+      - USER_SERVICE_URL=http://user-service:8081
+      - COURSE_SERVICE_URL=http://course-service:8082
+      - JWT_SECRET=super-secret-key-2026-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      course-service:
+        condition: service_started
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - user-service
+      - course-service
+      - enrollment-service
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
